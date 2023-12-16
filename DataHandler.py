@@ -9,7 +9,7 @@ class DataHandler:
         self.api_key = "bca37956d9d0c643fe8bca909180bb2c"
         
     
-    def collect_data(self, sport = "americanfootball_nfl", regions = ["us", "us2"], markets = ["h2h"], odds_format = "decimal"):        
+    def collect_data(self, sport:str = "americanfootball_nfl", regions:list[str] = ["us", "us2"], markets:list[str] = ["h2h"], odds_format:str = "decimal") -> None:        
         ## SEND REQUEST ##
         # df = self._send_request(sport, regions, markets, odds_format, filename = "SampleData4.json")
         df = self._send_request_local("SampleData4.json")
@@ -51,10 +51,12 @@ class DataHandler:
             file.close()
             
           
-    def get_best_odds(self, **kwargs):
+    def get_best_odds(self, **kwargs) -> pd.DataFrame:
         if ("odds" not in kwargs):
             odds_df = self.get_data(**kwargs)
         else:
+            if (not isinstance(kwargs["odds"], pd.DataFrame)):
+                raise ValueError("Odds argument is not pd.DataFrame.")
             odds_df = kwargs["odds"]
             
         home_team = odds_df.columns[5]  # COULD CHANGE IF STRUCTURE OF INFO CHANGES
@@ -92,7 +94,7 @@ class DataHandler:
         return best_odds_df
     
     
-    def get_data(self, **kwargs):
+    def get_data(self, **kwargs) -> pd.DataFrame:
         ## NEED TO DO CHECKS IF READ_CSV FAILS ##
         if ("path" in kwargs):
             return pd.read_csv(kwargs["path"])
@@ -102,30 +104,30 @@ class DataHandler:
             elif ("home" in kwargs and "away" in kwargs and "start_time" in kwargs):
                 return self.get_data_with_args(kwargs["home"], kwargs["away"], kwargs["start_time"])
         else:
-            return None
+            raise ValueError("Arguments did not correspond to existing file so data could not be retrieved.")
         
     
-    def list_sports(self):
+    def list_sports(self) -> list[str]:
         path = f"Data/"
         return [sport for sport in os.listdir(path) if os.path.isdir(os.path.join(path, sport))]
     
     
-    def list_files(self, sport = "americanfootball_nfl"):
+    def list_files(self, sport:str = "americanfootball_nfl") -> list[str]:
         path = f"Data/{sport}/"
         return os.listdir(path)
     
     
-    def _get_data_with_filename(self, filename, sport):
+    def _get_data_with_filename(self, filename:str, sport:str) -> pd.DataFrame:
         path = f"Data/{sport}/{filename}"
         return pd.read_csv(path)
        
         
-    def _get_data_with_args(self, home, away, st, sport):
+    def _get_data_with_args(self, home:str, away:str, st:pd.Series.dt, sport:str) -> pd.DataFrame:
         filename = DataHandler.build_filename(home, away, st, "csv")
         return self._get_data_with_filename(filename, sport)
         
         
-    def _send_request(self, sport, regions, markets, odds_format, filename=None):        
+    def _send_request(self, sport:str, regions:list[str], markets:list[str], odds_format:str, filename:str=None) -> pd.DataFrame:        
         response = requests.get(f"https://api.the-odds-api.com/v4/sports/{sport}/odds", params = {"api_key": self.api_key, "regions": ','.join(regions), "markets": ','.join(markets), "oddsFormat": odds_format})
         if response.status_code != 200:
             print(f'Failed to get odds: status_code {response.status_code}, response body {response.text}')
@@ -148,20 +150,19 @@ class DataHandler:
             return odds_df
         
         
-    def _send_request_local(self, request="./SampleData.json"):
-        file = open(request, "r")
-        odds_json = file.read()
-        odds_df = pd.read_json(odds_json, orient="records")
-        file.close()
-        return odds_df
+    def _send_request_local(self, request:str="./SampleData.json") -> pd.DataFrame:
+        try:
+            file = open(request, "r")
+        except FileNotFoundError:
+            print(f"File ({request}) not found.")
+        else:
+            odds_json = file.read()
+            odds_df = pd.read_json(odds_json, orient="records")
+            file.close()
+            return odds_df
       
       
-    @staticmethod      
-    def build_filename(home, away, st, file_type):
-        home = home.replace(' ', '')
-        away = away.replace(' ', '')
-        st = st.tz_convert("us/eastern")
-        return f"{st.year}-{st.month}-{st.day}-{st.hour}-{st.minute}-{away}-{home}.{file_type}"
+
 
 
     
