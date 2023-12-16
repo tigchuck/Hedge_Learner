@@ -11,16 +11,16 @@ class DataHandler:
     
     def collect_data(self, sport = "americanfootball_nfl", regions = ["us", "us2"], markets = ["h2h"], odds_format = "decimal"):        
         ## SEND REQUEST ##
-        # df = self._send_request(sport, regions, markets, odds_format, api_key = self.api_key, filename = "SampleData3.json")
-        df = self._send_request_local("SampleData3.json")
+        # df = self._send_request(sport, regions, markets, odds_format, filename = "SampleData4.json")
+        df = self._send_request_local("SampleData4.json")
         
         ## HANDLE REQUEST ##            
-        for index, row in df.iterrows():
+        for _, row in df.iterrows():
             sport = row["sport_key"]
-            home = row["home_team"]
-            away = row["away_team"]
+            home_team = row["home_team"]
+            away_team = row["away_team"]
             st = row["commence_time"]
-            filename = DataHandler.build_filename(home, away, st, "csv")
+            filename = DataHandler.build_filename(home_team, away_team, st, "csv")
                 
             ## CONDITIONALLY CREATE SPORT DIRECTORY ##
             path = f"Data/{sport}/"
@@ -31,7 +31,7 @@ class DataHandler:
             update_number = 0
             if (not os.path.isfile(path + filename)):
                 file = open(path + filename, "w")
-                file.write(f"Update,Time,Sportsbook,Type,{away},{home}\n")
+                file.write(f"Update,Time,Sportsbook,Type,{away_team},{home_team}\n")
             else:
                 file = open(path + filename, "a+")
                 file.seek(0, os.SEEK_SET)
@@ -50,6 +50,60 @@ class DataHandler:
                     file.write(f"{update_number},{update_time},{book},{bet_type},{away_price},{home_price}\n")
             file.close()
             
+          
+    def get_best_odds(self, **kwargs):
+        if ("odds" not in kwargs):
+            odds_df = self.get_data(**kwargs)
+        else:
+            odds_df = kwargs["odds"]
+            
+        home_team = odds_df.columns[5]  # COULD CHANGE IF STRUCTURE OF INFO CHANGES
+        away_team = odds_df.columns[4]  # COULD CHANGE IF STRUCTURE OF INFO CHANGES
+        best_odds_df = pd.DataFrame(columns=odds_df.columns)
+        index = 0
+        update_time = 0
+        sportsbooks = dict()
+        bet_type = ""
+        home_odds = 0
+        away_odds = 0
+        for _, row in odds_df.iterrows():
+            if (row["Update"] != index):
+                best_odds_df.loc[len(best_odds_df)] = [index, update_time, sportsbooks, bet_type, home_odds, away_odds]
+                index += 1
+                update_time = 0
+                sportsbooks = dict()
+                bet_type = ""
+                home_odds = 0
+                away_odds = 0
+            
+            if (row[away_team] > away_odds):
+                away_odds = row[away_team]
+                update_time = row["Time"]
+                sportsbooks[0] = row["Sportsbook"]
+                bet_type = row["Type"]
+                
+            if (row[home_team] > home_odds):
+                home_odds = row[home_team]
+                update_time = row["Time"]
+                sportsbooks[1] = row["Sportsbook"]
+                bet_type = row["Type"]
+                
+        best_odds_df.loc[len(best_odds_df)] = [index, update_time, sportsbooks, bet_type, home_odds, away_odds] # ADD LAST ROW
+        return best_odds_df
+    
+    
+    def get_data(self, **kwargs):
+        ## NEED TO DO CHECKS IF READ_CSV FAILS ##
+        if ("path" in kwargs):
+            return pd.read_csv(kwargs["path"])
+        elif ("sport" in kwargs):
+            if ("filename" in kwargs):
+                return self._get_data_with_filename(kwargs["filename"], kwargs["sport"])
+            elif ("home" in kwargs and "away" in kwargs and "start_time" in kwargs):
+                return self.get_data_with_args(kwargs["home"], kwargs["away"], kwargs["start_time"])
+        else:
+            return None
+        
     
     def list_sports(self):
         path = f"Data/"
@@ -61,6 +115,16 @@ class DataHandler:
         return os.listdir(path)
     
     
+    def _get_data_with_filename(self, filename, sport):
+        path = f"Data/{sport}/{filename}"
+        return pd.read_csv(path)
+       
+        
+    def _get_data_with_args(self, home, away, st, sport):
+        filename = DataHandler.build_filename(home, away, st, "csv")
+        return self._get_data_with_filename(filename, sport)
+        
+        
     def _send_request(self, sport, regions, markets, odds_format, filename=None):        
         response = requests.get(f"https://api.the-odds-api.com/v4/sports/{sport}/odds", params = {"api_key": self.api_key, "regions": ','.join(regions), "markets": ','.join(markets), "oddsFormat": odds_format})
         if response.status_code != 200:
