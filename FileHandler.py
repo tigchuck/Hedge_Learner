@@ -66,6 +66,16 @@ class FileHandler:
         file = open(filepath, "w")
         file.write(f"Update,Time,Sportsbook,Type,{away},{home}\n")
         file.close()
+        
+
+    def get_file_ids(self, sport:str):
+        if (not self.__is_valid_sport(sport)):
+            raise ValueError(f"{sport} is not a valid sport.")
+        elif(not self.directory_exists(sport)):
+            raise ValueError(f"{sport} is not a valid directory.")
+        else:
+            path = f"{self.__mount}/{sport}/"
+            return [filename.split(".csv")[0] for filename in os.listdir(path) if os.path.isfile(os.path.join(path, filename))]
                 
     
     def file_exists(self, file_id:str) -> bool:
@@ -215,4 +225,4 @@ class FileHandler:
     
     
     def __is_valid_price(self, price:str) -> bool:
-        return isinstance(price, float) and price > 1
+        return isinstance(price, float) and price >= 1

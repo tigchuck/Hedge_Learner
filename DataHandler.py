@@ -13,8 +13,8 @@ class DataHandler(FileHandler):
     
     def collect_data(self, sport:str = "americanfootball_nfl", regions:list[str] = ["us", "us2"], markets:list[str] = ["h2h"], odds_format:str = "decimal") -> None:        
         ## SEND REQUEST ##
-        # odds_df = self.__send_request(sport, regions, markets, odds_format, filename = "SampleData4.json")
-        odds_df = self.__send_request_local("SampleData4.json")
+        # odds_df = self.__send_request(sport, regions, markets, odds_format, filename = "SampleData6.json")
+        odds_df = self.__send_request_local("SampleData6.json")
         
         ## HANDLE REQUEST ##            
         for _, row in odds_df.iterrows():
