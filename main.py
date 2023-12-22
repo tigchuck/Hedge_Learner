@@ -1,9 +1,9 @@
-import DataHandler
+from DataHandler import DataHandler
 from OddsMath import OddsMath
 
 def main():
-    handler = DataHandler.DataHandler()
-    print(handler.get_file_ids("soccer_epl"))
+    handler = DataHandler()
+    handler.collect_data()
     # for filename in handler.list_files(sport="americanfootball_nfl"):
     #     if (filename in file_set):
     #         print(filename)

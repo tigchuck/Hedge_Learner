@@ -6,78 +6,99 @@ import pandas as pd
 
 
 ##################
-# INFO TABLE STRUCTURE
-# KEY => FILE_ID
-# VALUE => DICTIONARY OF INFO
-# VALUE KEYS => HOME TEAM, AWAY TEAM, START TIME, SPORT
-#
-# FILE NAME STRUCTURE
-# FILE_ID.csv
-#
-# ALL UPDATES TO ANY FILE MUST BE MADE USING THIS CLASS
+# Manages files in the Data/ directory.
+# Reads, Creates, and Appends files.
+# Manages table storing file information.
+# Reads, Updates, Modifies, and Writes to storage this table.
 ##################
 
 
 class FileHandler:
-    def __init__(self, mount:str = "Data"):
+    def __init__(self, table = None, mount = "Data"):
+        """
+        Constructor
+        
+        param table: For testing purposes, is table that stores information about each file.
+        type table: dict()
+        param mount: The mount point for where data is stored
+        type mount: str
+        """
         self.__mount = mount
-        self.__init_table()
         
+        if (table == None):
+            self.__init_table()
+        else:
+            self.__table = table
         
-    ## PUBLIC METHODS ##
+    
+    
+    ## PUBLIC METHODS ##  
+          
+    def read_file(self, file_id:str, bet_type:str) -> pd.DataFrame:
+        """
+        Read file as Pandas DataFrame.
         
-    def read_file(self, file_id:str) -> pd.DataFrame:
-        filepath = self.__get_filepath(file_id)
+        param file_id: ID of file to be read
+        type file_id: str
+        param bet_type: Type of bet file to read
+        type bet_type: str
+        return: File data
+        rtype: Pandas.DataFrame
+        """
+        
+        if (not self.file_exists(file_id)):
+            raise ValueError("File ID ({file_id}) does not exist.")
+        filepath = self.__get_filepath(file_id, bet_type)
         return pd.read_csv(filepath)
-    
-    
-    def append_file(self, file_id:str, update_number:int, update_time:pd.Timestamp, sportsbook:str, bet_type:str, home:float, away:float):
+       
+       
+    def append_file(self, file_id:str, bet_type:str, *args, **kwargs):
+        """
+        Adds new line of data to file.
+        Args and Kwargs because different sports and/or bet types require different info.
+        
+        param file_id: ID of file to be read
+        type file_id: str
+        param bet_type: Type of bet file to read
+        type bet_type: str
+        param args: names of all the kwargs in the order they should be read into the file
+        type args: list of str
+        param kwargs: values pertaining to each of the arguments necessary for the file
+        type kwargs: dictionary(str, str)
+        """
+        
         if (not self.file_exists(file_id)):
             raise ValueError(f"File ID {file_id} does not exist.")
-        elif (not self.__is_valid_update_number(update_number)):
-            raise ValueError(f"{update_number} is not a valid update number.")
-        elif (not self.__is_valid_time(update_time)):
-            raise ValueError(f"{update_time} is not a valid update time.")
-        elif (not self.__is_valid_sportsbook(sportsbook)):
-            raise ValueError(f"{sportsbook} is not a valid sportsbook.")
-        elif (not self.__is_valid_bet_type(bet_type)):
-            raise ValueError(f"{bet_type} is not a valid bet type.")
-        elif (not self.__is_valid_price(home)):
-            raise ValueError(f"{home} is not a valid price.")
-        elif (not self.__is_valid_price(away)):
-            raise ValueError(f"{away} is not a valid price.")
-        else:
-            filepath = self.__get_filepath(file_id)
-            file = open(filepath, "a")
-            file.write(f"{update_number},{update_time},{sportsbook},{bet_type},{away},{home}\n")
-            file.close()
-    
-    
-    def create_file(self, file_id:str, home:str, away:str, start_time:pd.Timestamp, sport:str):
-        if (self.file_exists(file_id)):
-            raise ValueError(f"File already exists for {file_id}.")
-        elif(not self.directory_exists(sport)):
-            self.create_directory(sport)
-        self.__update_table(file_id, "home_team", home)
-        self.__update_table(file_id, "away_team", away)
-        self.__update_table(file_id, "start_time", start_time.strftime("%Y-%m-%d %X"))
-        self.__update_table(file_id, "sport", sport)
-        filepath = self.__get_filepath(file_id)
-        file = open(filepath, "w")
-        file.write(f"Update,Time,Sportsbook,Type,{away},{home}\n")
+        filepath = self.__get_filepath(file_id, bet_type)
+        file = open(filepath, "a")
+        
+        arr = []
+        for arg in args:
+            arr.append(kwargs[arg])
+        line = ','.join(str(obj) for obj in arr)
+        line += "\n"
+        file.write(line)
         file.close()
         
-
-    def get_file_ids(self, sport:str):
-        if (not self.__is_valid_sport(sport)):
-            raise ValueError(f"{sport} is not a valid sport.")
-        elif(not self.directory_exists(sport)):
-            raise ValueError(f"{sport} is not a valid directory.")
-        else:
-            path = f"{self.__mount}/{sport}/"
-            return [filename.split(".csv")[0] for filename in os.listdir(path) if os.path.isfile(os.path.join(path, filename))]
-                
-    
+          
+    def create_file(self, file_id:str, sport:str, season:str, bet_type:str, home_team:str, away_team:str, start_time:pd.Timestamp, columns:list[str]):
+        if (self.file_exists(file_id)):
+            raise ValueError(f"File already exists for {file_id}.")
+        
+        if (not self.directory_exists(sport)):
+            self.create_directory(sport)
+        if (not self.directory_exists(f"{sport}/{season}")):
+            self.create_directory(f"{sport}/{season}")
+        if (not self.directory_exists(f"{sport}/{season}/{bet_type}")):
+            self.create_directory(f"{sport}/{season}/{bet_type}")
+          
+        self.__update_table(file_id, "sport", "season", "home_team", "away_team", "start_time", sport=sport, season=season, home_team=home_team, away_team=away_team, start_time=start_time.strftime("%Y-%m-%d %X"))
+        filepath = self.__get_filepath(file_id, bet_type)
+        file = open(filepath, "w")
+        file.write(f"{','.join(columns)}\n")
+        file.close()
+        
+        
     def file_exists(self, file_id:str) -> bool:
         return file_id in self.__table
     
@@ -88,23 +109,38 @@ class FileHandler:
     
     def create_directory(self, directory:str) -> None:
         os.mkdir(f"{self.__mount}/{directory}/")
-    
         
+
+
+    ## GETTERS AND SETTERS ##
+    
     def get_sport(self, file_id:str) -> str:
         if (not self.file_exists(file_id)):
             raise ValueError("File ID ({file_id}) does not exist.")
         else:
             return self.__read_table(file_id, "sport")
-        
-        
+       
+           
     def set_sport(self, file_id:str, sport:str) -> None:
         if (not self.file_exists(file_id)):
             raise ValueError("File ID ({file_id}) does not exist.")
-        elif (not self.__is_valid_sport(sport)):
-            raise ValueError(f"{sport} is not a valid sport.")
         else:
-            self.__update_table(file_id, "sport", sport)
+            self.__update_table(file_id, "sport", sport=sport)
+            
         
+    def get_season(self, file_id:str) -> str:
+        if (not self.file_exists(file_id)):
+            raise ValueError("File ID ({file_id}) does not exist.")
+        else:
+            return self.__read_table(file_id, "season")
+        
+        
+    def set_season(self, file_id:str, season:str) -> None:
+        if (not self.file_exists(file_id)):
+            raise ValueError("File ID ({file_id}) does not exist.")
+        else:
+            self.__update_table(file_id, "season", season=season)
+            
         
     def get_home_team(self, file_id:str) -> str:
         if (not self.file_exists(file_id)):
@@ -112,117 +148,95 @@ class FileHandler:
         else:
             return self.__read_table(file_id, "home_team")
         
-        
-    def set_home_team(self, file_id:str, team:str) -> None:
+    
+    def set_home_team(self, file_id:str, home_team:str) -> None:
         if (not self.file_exists(file_id)):
             raise ValueError("File ID ({file_id}) does not exist.")
-        elif (not self.__is_valid_team(team)):
-            raise ValueError(f"{team} is not a valid team.")
         else:
-            self.__update_table(file_id, "home_team", team)
-        
-        
+            self.__update_table(file_id, "home_team", home_team=home_team)
+            
+    
     def get_away_team(self, file_id:str) -> str:
         if (not self.file_exists(file_id)):
             raise ValueError("File ID ({file_id}) does not exist.")
         else:
             return self.__read_table(file_id, "away_team")
-        
-        
-    def set_away_team(self, file_id:str, team:str) -> None:
+
+  
+    def set_away_team(self, file_id:str, away_team:str) -> None:
         if (not self.file_exists(file_id)):
             raise ValueError("File ID ({file_id}) does not exist.")
-        elif (not self.__is_valid_team(team)):
-            raise ValueError(f"{team} is not a valid team.")
         else:
-            self.__update_table(file_id, "away_team", team)
-        
-        
+            self.__update_table(file_id, "away_team", away_team=away_team)
+
+
     def get_start_time(self, file_id:str) -> str:
         if (not self.file_exists(file_id)):
             raise ValueError("File ID ({file_id}) does not exist.")
         else:
             start_time = self.__read_table(file_id, "start_time")
             return pd.Timestamp(start_time)
-        
-        
+
+
     def set_start_time(self, file_id:str, start_time:pd.Timestamp) -> None:
         if (not self.file_exists(file_id)):
             raise ValueError("File ID ({file_id}) does not exist.")
-        elif (not self.__is_valid_time(start_time)):
-            raise ValueError(f"{start_time} is not a valid start time.")
         else:
-            self.__update_table(file_id, "start_time", start_time.strftime("%Y-%m-%d %X"))
+            self.__update_table(file_id, "start_time", start_time=start_time.strftime("%Y-%m-%d %X"))
+            
+    
+    # NEED UPDATE
+    def get_file_ids(self, sport:str, season:str, bet_type:str):
+        if (not self.__is_valid_sport(sport)):
+            raise ValueError(f"{sport} is not a valid sport.")
+        elif(not self.directory_exists(sport)):
+            raise ValueError(f"{sport} is not a valid directory.")
+        else:
+            path = f"{self.__mount}/{sport}/"
+            return [filename.split(".csv")[0] for filename in os.listdir(path) if os.path.isfile(os.path.join(path, filename))]
+    
         
-        
-    ## PRIVATE METHODS ##
+            
+    ##  PRIVATE METHODS ##    
+    
+    def __get_filepath(self, file_id:str, bet_type:str) -> str:
+        sport = self.get_sport(file_id)
+        season = self.get_season(file_id)
+        return f"{self.__mount}/{sport}/{season}/{bet_type}/{file_id}.csv"
+    
     
     def __init_table(self) -> None:
+        """
+        Initialize table containing information about each file.
+        """
+        
         file = open(f"{self.__mount}/info_table.json", "r")
         try:
             self.__table = json.load(file)
         except json.decoder.JSONDecodeError:
             self.__table = dict()
-        finally:
-            file.close()
+        file.close()
         
-        
+              
     def __read_table(self, file_id:str, key:str) -> None:
         if (not self.file_exists(file_id)):
             raise ValueError("File ID {file_id} does not exist.")
         else:
             return self.__table[file_id][key]
-    
-    
+        
+        
     def __write_table(self) -> None:
         file = open(f"{self.__mount}/info_table.json", "w")
         json_data = json.dumps(self.__table, indent=4)
         file.write(json_data)
         file.close()
         
-    
-    def __update_table(self, file_id:str, key:str, value:str) -> None:
+        
+    def __update_table(self, file_id:str, *args, **kwargs) -> None:
         if (not self.file_exists(file_id)):
-            if (self.__is_valid_id(file_id)):
-                self.__table[file_id] = dict()
-            else:
-                raise ValueError(f"{file_id} is not a valid file ID.")
-        self.__table[file_id][key] = value
+            self.__table[file_id] = dict()
+            
+        for arg in args:
+            self.__table[file_id][arg] = kwargs[arg]
         self.__write_table()
-    
-    
-    def __get_filepath(self, file_id:str) -> str:
-        sport = self.get_sport(file_id)
-        return f"{self.__mount}/{sport}/{file_id}.csv"
-    
-    
-    def __is_valid_id(self, file_id:str) -> bool:
-        return isinstance(file_id, str)
-    
-    
-    def __is_valid_sport(self, sport:str) -> bool:
-        return isinstance(sport, str)
-    
-    
-    def __is_valid_time(self, update_time:pd.Timestamp) -> bool:
-        return isinstance(update_time, pd.Timestamp)
-    
-    
-    def __is_valid_team(self, team:str) -> bool:
-        return isinstance(team, str)
-    
-    
-    def __is_valid_update_number(self, num:int) -> bool:
-        return isinstance(num, int) and num >= 0
-    
-    
-    def __is_valid_sportsbook(self, sportsbook:str) -> bool:
-        return isinstance(sportsbook, str)
-    
-    
-    def __is_valid_bet_type(self, bet_type:str) -> bool:
-        return isinstance(bet_type, str) and bet_type in ["h2h", "spreads", "totals"]
-    
-    
-    def __is_valid_price(self, price:str) -> bool:
-        return isinstance(price, float) and price >= 1
+            
