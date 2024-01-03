@@ -3,7 +3,7 @@ from OddsMath import OddsMath
 
 def main():
     handler = DataHandler()
-    handler.collect_data()
+    handler.collect_data(request_type="local", filename="SampleData6.json")
     # for filename in handler.list_files(sport="americanfootball_nfl"):
     #     if (filename in file_set):
     #         print(filename)

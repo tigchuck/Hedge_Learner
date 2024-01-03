@@ -3,6 +3,10 @@ FileHandler.py
     Requests new data, appends to exisiting files, and tracks info about all existing files.
     Can be used to request information.
 
+DataHandler.py
+    Manages information coming in from API
+    Requests data from API and stores it in correct file with the help of FileHandler
+
 Data/info_table.json
     Tracks the inforamtion about all exisiting files.
     Its state is managed by FileHandler.

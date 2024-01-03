@@ -95,10 +95,18 @@ class DataHandler(FileHandler):
     
     ## REQUEST METHODS ##
     
-    def collect_data(self, sport:str="americanfootball_nfl", regions:list[str]=["us", "us2"], markets:str="h2h", odds_format:str="decimal") -> None:        
+    def collect_data(self, sport:str="americanfootball_nfl", regions:list[str]=["us", "us2"], markets:str="h2h", odds_format:str="decimal", request_type:str="default", **kwargs) -> None:        
         ## SEND REQUEST ##
-        # odds_df = self.__send_request(sport, regions, markets, odds_format, filename = "SampleData6.json")
-        odds_df = self.__send_request_local("SampleData6.json")
+        if (request_type == "default"):
+            pass
+            # odds_df = self.__send_request(sport, regions, markets, odds_format, filename = "SampleData6.json")
+        elif (request_type == "historic"):
+            pass
+            # odds_df = self.__send_request_historic(sport, regions, markets, odds_format, kwargs["update_time"])
+        elif (request_type == "local"):
+            odds_df = self.__send_request_local(kwargs["filename"])
+        else:
+            raise ValueError(f"{request_type} is not a valid request type.")
         
         ## HANDLE REQUEST ##            
         for _, row in odds_df.iterrows():
@@ -151,6 +159,10 @@ class DataHandler(FileHandler):
             
     #         odds_df = pd.read_json(json.dumps(odds_json), orient="records")
     #         return odds_df
+    
+    
+    def __send_request_historic(self, sport:str, regions:list[str], markets:list[str], odds_format:str, update_time:str) -> pd.DataFrame:
+        pass
         
         
     def __send_request_local(self, request:str="./SampleData.json") -> pd.DataFrame:

@@ -48,7 +48,7 @@ class FileHandler:
         
         if (not self.file_exists(file_id)):
             raise ValueError("File ID ({file_id}) does not exist.")
-        filepath = self.__get_filepath(file_id, bet_type)
+        filepath = self.get_filepath(file_id, bet_type)
         return pd.read_csv(filepath)
        
        
@@ -69,7 +69,7 @@ class FileHandler:
         
         if (not self.file_exists(file_id)):
             raise ValueError(f"File ID {file_id} does not exist.")
-        filepath = self.__get_filepath(file_id, bet_type)
+        filepath = self.get_filepath(file_id, bet_type)
         file = open(filepath, "a")
         
         arr = []
@@ -93,10 +93,16 @@ class FileHandler:
             self.create_directory(f"{sport}/{season}/{bet_type}")
           
         self.__update_table(file_id, "sport", "season", "home_team", "away_team", "start_time", sport=sport, season=season, home_team=home_team, away_team=away_team, start_time=start_time)
-        filepath = self.__get_filepath(file_id, bet_type)
+        filepath = self.get_filepath(file_id, bet_type)
         file = open(filepath, "w")
         file.write(f"{','.join(columns)}\n")
         file.close()
+        
+            
+    def get_filepath(self, file_id:str, bet_type:str) -> str:
+        sport = self.get_sport(file_id)
+        season = self.get_season(file_id)
+        return f"{self.__mount}/{sport}/{season}/{bet_type}/{file_id}.csv"
         
         
     def file_exists(self, file_id:str) -> bool:
@@ -198,12 +204,6 @@ class FileHandler:
         
             
     ##  PRIVATE METHODS ##    
-    
-    def __get_filepath(self, file_id:str, bet_type:str) -> str:
-        sport = self.get_sport(file_id)
-        season = self.get_season(file_id)
-        return f"{self.__mount}/{sport}/{season}/{bet_type}/{file_id}.csv"
-    
     
     def __init_table(self) -> None:
         """
