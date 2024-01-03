@@ -58,6 +58,8 @@ class DataHandler(FileHandler):
         return self.__structure[sport]["structure"][bet_type]
     
     def __read_prices(self, sport:str, bet_type:str, data:dict):
+        if (data["key"] != bet_type):
+            return
         keys = self.__structure[sport]["structure"][bet_type][3:]
         values = dict()
         for key in keys:
@@ -96,7 +98,7 @@ class DataHandler(FileHandler):
     def collect_data(self, sport:str="americanfootball_nfl", regions:list[str]=["us", "us2"], markets:str="h2h", odds_format:str="decimal") -> None:        
         ## SEND REQUEST ##
         # odds_df = self.__send_request(sport, regions, markets, odds_format, filename = "SampleData6.json")
-        odds_df = self.__send_request_local("SampleData5.json")
+        odds_df = self.__send_request_local("SampleData6.json")
         
         ## HANDLE REQUEST ##            
         for _, row in odds_df.iterrows():
@@ -105,9 +107,9 @@ class DataHandler(FileHandler):
             bet_type = markets
             home_team = row["home_team"]
             away_team = row["away_team"]
-            start_time = pd.Timestamp(row["commence_time"])
+            start_time = row["commence_time"].strftime('%Y-%m-%dT%XZ')
             season = self.calculate_season(sport, start_time)
-                
+
             ## OPEN/CREATE FILE ##
             if (super().file_exists(file_id)):
                 file_df = super().read_file(file_id, bet_type)
@@ -119,10 +121,13 @@ class DataHandler(FileHandler):
             ## WRITE TO FILE ##
             for item in row["bookmakers"]:
                 values = self.__read_prices(sport, bet_type, item["markets"][0])
-                values["Update"] = update_number
-                values["Time"] = pd.Timestamp(item["last_update"])
-                values["Sportsbook"] = item["key"]
-                super().append_file(file_id, bet_type, *self.__get_structure(sport, bet_type), **values)
+                if (values == None):
+                    continue
+                else:
+                    values["Update"] = update_number
+                    values["Time"] = item["last_update"]
+                    values["Sportsbook"] = item["key"]
+                    super().append_file(file_id, bet_type, *self.__get_structure(sport, bet_type), **values)
         
         
     # def __send_request(self, sport:str, regions:list[str], markets:list[str], odds_format:str, filename:str=None) -> pd.DataFrame:        

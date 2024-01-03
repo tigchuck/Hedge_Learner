@@ -81,7 +81,7 @@ class FileHandler:
         file.close()
         
           
-    def create_file(self, file_id:str, sport:str, season:str, bet_type:str, home_team:str, away_team:str, start_time:pd.Timestamp, columns:list[str]):
+    def create_file(self, file_id:str, sport:str, season:str, bet_type:str, home_team:str, away_team:str, start_time:str, columns:list[str]):
         if (self.file_exists(file_id)):
             raise ValueError(f"File already exists for {file_id}.")
         
@@ -92,7 +92,7 @@ class FileHandler:
         if (not self.directory_exists(f"{sport}/{season}/{bet_type}")):
             self.create_directory(f"{sport}/{season}/{bet_type}")
           
-        self.__update_table(file_id, "sport", "season", "home_team", "away_team", "start_time", sport=sport, season=season, home_team=home_team, away_team=away_team, start_time=start_time.strftime("%Y-%m-%d %X"))
+        self.__update_table(file_id, "sport", "season", "home_team", "away_team", "start_time", sport=sport, season=season, home_team=home_team, away_team=away_team, start_time=start_time)
         filepath = self.__get_filepath(file_id, bet_type)
         file = open(filepath, "w")
         file.write(f"{','.join(columns)}\n")
@@ -178,11 +178,11 @@ class FileHandler:
             return pd.Timestamp(start_time)
 
 
-    def set_start_time(self, file_id:str, start_time:pd.Timestamp) -> None:
+    def set_start_time(self, file_id:str, start_time:str) -> None:
         if (not self.file_exists(file_id)):
             raise ValueError("File ID ({file_id}) does not exist.")
         else:
-            self.__update_table(file_id, "start_time", start_time=start_time.strftime("%Y-%m-%d %X"))
+            self.__update_table(file_id, "start_time", start_time=start_time)
             
     
     # NEED UPDATE
