@@ -94,7 +94,7 @@ class FileHandler:
             season = kwargs["season"]
             home_team = kwargs["home_team"]
             away_team = kwargs["away_team"]
-            start_time = kwargs["away_team"]
+            start_time = kwargs["start_time"]
             self.__update_table(file_id, "sport", "season", "home_team", "away_team", "start_time", "bet_type", 
                                 sport=sport, season=season, home_team=home_team, away_team=away_team, start_time=start_time, bet_type=[bet_type])
         
@@ -197,8 +197,7 @@ class FileHandler:
         if (not self.id_exists(file_id)):
             raise ValueError("File ID ({file_id}) does not exist.")
         else:
-            start_time = self.__read_table(file_id, "start_time")
-            return pd.Timestamp(start_time)
+            return self.__read_table(file_id, "start_time")
 
 
     def set_start_time(self, file_id:str, start_time:str) -> None:

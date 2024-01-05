@@ -95,7 +95,7 @@ class DataHandler(FileHandler):
     
     ## REQUEST METHODS ##
     
-    def collect_data(self, sport:str="americanfootball_nfl", regions:str="us", markets:str="h2h", odds_format:str="decimal", request_type:str="default", **kwargs) -> None:        
+    def collect_data(self, sport:str="americanfootball_nfl", regions:list[str]=["us"], markets:str="h2h", odds_format:str="decimal", request_type:str="default", **kwargs) -> None:        
         ## SEND REQUEST ##
         if (request_type == "default"):
             odds_df = self.__send_request(sport, regions, markets, odds_format, filename=kwargs["filename"])
@@ -127,6 +127,10 @@ class DataHandler(FileHandler):
             else:
                 super().create_file(file_id, bet_type, self.__get_structure(sport, bet_type), sport=sport, season=season, home_team=home_team, away_team=away_team, start_time=start_time)
                 update_number = 0
+                
+            ## VERIFY START TIME HAS NOT CHANGED ##
+            if (start_time != super().get_start_time(file_id)):
+                super().set_start_time(file_id, start_time)
 
             ## WRITE TO FILE ##
             for item in row["bookmakers"]:
@@ -140,9 +144,9 @@ class DataHandler(FileHandler):
                     super().append_file(file_id, bet_type, *self.__get_structure(sport, bet_type), **values)
         
         
-    def __send_request(self, sport:str, regions:str, markets:str, odds_format:str, filename:str=None) -> pd.DataFrame:  
-        # Only send 1 region and market at a time. This will make copying them into files more simple and allow you to more easily track number of requests sent      
-        response = requests.get(f"https://api.the-odds-api.com/v4/sports/{sport}/odds", params = {"api_key": self.api_key, "regions": regions, "markets": markets, "oddsFormat": odds_format})
+    def __send_request(self, sport:str, regions:list[str], markets:str, odds_format:str, filename:str=None) -> pd.DataFrame:  
+        # Only send 1 market at a time. This will make copying them into files more simple.    
+        response = requests.get(f"https://api.the-odds-api.com/v4/sports/{sport}/odds", params = {"api_key": self.api_key, "regions": ",".join(regions), "markets": markets, "oddsFormat": odds_format})
         if response.status_code != 200:
             print(f'Failed to get odds: status_code {response.status_code}, response body {response.text}')
         else:

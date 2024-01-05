@@ -3,31 +3,11 @@ from OddsMath import OddsMath
 
 def main():
     handler = DataHandler()
-    # handler.collect_data(sport="americanfootball_nfl", regions="us", markets="h2h", odds_format="decimal", request_type="default", filename="SampleData9.json")    
-    # handler.collect_data(sport="americanfootball_nfl", regions="us2", markets="h2h", odds_format="decimal", request_type="default", filename="SampleData9-2.json")
-    # handler.collect_data(sport="americanfootball_nfl", regions="us", markets="spreads", odds_format="decimal", request_type="default", filename="SampleData10.json")
-    # handler.collect_data(sport="americanfootball_nfl", regions="us2", markets="spreads", odds_format="decimal", request_type="default", filename="SampleData10-2.json")
-    handler.collect_data(sport="americanfootball_nfl", regions="us", markets="h2h", odds_format="decimal", request_type="local", filename="SampleData9.json")    
-    handler.collect_data(sport="americanfootball_nfl", regions="us2", markets="h2h", odds_format="decimal", request_type="local", filename="SampleData9-2.json")
-    handler.collect_data(sport="americanfootball_nfl", regions="us", markets="spreads", odds_format="decimal", request_type="local", filename="SampleData10.json")
+    handler.collect_data(sport="americanfootball_nfl", regions=["us","us2"], markets="h2h", odds_format="decimal", request_type="default", filename="Data/Sample_API_JSON/americanfootball_nfl&us,us2&h2h&1-5-24-6-00.json")    
+    handler.collect_data(sport="americanfootball_nfl", regions=["us","us2"], markets="spreads", odds_format="decimal", request_type="default", filename="Data/Sample_API_JSON/americanfootball_nfl&us,us2&spreads&1-5-24-6-00.json")
 
-    # for filename in handler.list_files(sport="americanfootball_nfl"):
-    #     if (filename in file_set):
-    #         print(filename)
-    #     file_set.add(filename)
-    #     df = handler.get_data(filename = filename, sport = "americanfootball_nfl")
-    #     odds_df = handler.get_best_odds(odds = df)
-        
-    #     home_team = odds_df.columns[5]  # COULD CHANGE IF STRUCTURE OF INFO CHANGES
-    #     away_team = odds_df.columns[4]  # COULD CHANGE IF STRUCTURE OF INFO CHANGES
-    #     best_implied_odds = float("inf")
-    #     for _, row in odds_df.iterrows():
-    #         home_prob = OddsMath.implied_prob(row[home_team])
-    #         away_prob = OddsMath.implied_prob(row[away_team])
-    #         best_implied_odds = min(best_implied_odds, away_prob + home_prob)
-    #     if (best_implied_odds < 1):
-    #         print(f"{away_team} @ {home_team}: {best_implied_odds}\n")
+
+
 
 if __name__ == "__main__":
-    print("Running...")
     main()
