@@ -95,11 +95,10 @@ class DataHandler(FileHandler):
     
     ## REQUEST METHODS ##
     
-    def collect_data(self, sport:str="americanfootball_nfl", regions:list[str]=["us", "us2"], markets:str="h2h", odds_format:str="decimal", request_type:str="default", **kwargs) -> None:        
+    def collect_data(self, sport:str="americanfootball_nfl", regions:str="us", markets:str="h2h", odds_format:str="decimal", request_type:str="default", **kwargs) -> None:        
         ## SEND REQUEST ##
         if (request_type == "default"):
-            pass
-            # odds_df = self.__send_request(sport, regions, markets, odds_format, filename = "SampleData6.json")
+            odds_df = self.__send_request(sport, regions, markets, odds_format, filename=kwargs["filename"])
         elif (request_type == "historic"):
             pass
             # odds_df = self.__send_request_historic(sport, regions, markets, odds_format, kwargs["update_time"])
@@ -119,11 +118,14 @@ class DataHandler(FileHandler):
             season = self.calculate_season(sport, start_time)
 
             ## OPEN/CREATE FILE ##
-            if (super().file_exists(file_id)):
+            if (super().file_exists(file_id, bet_type)):
                 file_df = super().read_file(file_id, bet_type)
                 update_number = int(file_df.iloc[-1,:]["Update"]) + 1
+            elif (super().id_exists(file_id)):
+                super().create_file(file_id, bet_type, self.__get_structure(sport, bet_type))
+                update_number = 0
             else:
-                super().create_file(file_id, sport, season, bet_type, home_team, away_team, start_time, self.__get_structure(sport, bet_type))
+                super().create_file(file_id, bet_type, self.__get_structure(sport, bet_type), sport=sport, season=season, home_team=home_team, away_team=away_team, start_time=start_time)
                 update_number = 0
 
             ## WRITE TO FILE ##
@@ -138,27 +140,28 @@ class DataHandler(FileHandler):
                     super().append_file(file_id, bet_type, *self.__get_structure(sport, bet_type), **values)
         
         
-    # def __send_request(self, sport:str, regions:list[str], markets:list[str], odds_format:str, filename:str=None) -> pd.DataFrame:        
-    #     response = requests.get(f"https://api.the-odds-api.com/v4/sports/{sport}/odds", params = {"api_key": self.api_key, "regions": ','.join(regions), "markets": ','.join(markets), "oddsFormat": odds_format})
-    #     if response.status_code != 200:
-    #         print(f'Failed to get odds: status_code {response.status_code}, response body {response.text}')
-    #     else:
-    #         odds_json = response.json()
+    def __send_request(self, sport:str, regions:str, markets:str, odds_format:str, filename:str=None) -> pd.DataFrame:  
+        # Only send 1 region and market at a time. This will make copying them into files more simple and allow you to more easily track number of requests sent      
+        response = requests.get(f"https://api.the-odds-api.com/v4/sports/{sport}/odds", params = {"api_key": self.api_key, "regions": regions, "markets": markets, "oddsFormat": odds_format})
+        if response.status_code != 200:
+            print(f'Failed to get odds: status_code {response.status_code}, response body {response.text}')
+        else:
+            odds_json = response.json()
             
-    #         print('Number of events:', len(odds_json))
-    #         # print(odds_json)
+            print('Number of events:', len(odds_json))
+            # print(odds_json)
             
-    #         if filename != None:
-    #             file = open(filename, "w")
-    #             json.dump(odds_json, file)
-    #             file.close()
+            if filename != None:
+                file = open(filename, "w")
+                json.dump(odds_json, file)
+                file.close()
 
-    #         # Check the usage quota
-    #         print('Remaining requests', response.headers['x-requests-remaining'])
-    #         print('Used requests', response.headers['x-requests-used'])
+            # Check the usage quota
+            print('Remaining requests', response.headers['x-requests-remaining'])
+            print('Used requests', response.headers['x-requests-used'])
             
-    #         odds_df = pd.read_json(json.dumps(odds_json), orient="records")
-    #         return odds_df
+            odds_df = pd.read_json(json.dumps(odds_json), orient="records")
+            return odds_df
     
     
     def __send_request_historic(self, sport:str, regions:list[str], markets:list[str], odds_format:str, update_time:str) -> pd.DataFrame:

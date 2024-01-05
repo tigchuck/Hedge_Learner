@@ -46,7 +46,7 @@ class FileHandler:
         rtype: Pandas.DataFrame
         """
         
-        if (not self.file_exists(file_id)):
+        if (not self.file_exists(file_id, bet_type)):
             raise ValueError("File ID ({file_id}) does not exist.")
         filepath = self.get_filepath(file_id, bet_type)
         return pd.read_csv(filepath)
@@ -67,7 +67,7 @@ class FileHandler:
         type kwargs: dictionary(str, str)
         """
         
-        if (not self.file_exists(file_id)):
+        if (not self.file_exists(file_id, bet_type)):
             raise ValueError(f"File ID {file_id} does not exist.")
         filepath = self.get_filepath(file_id, bet_type)
         file = open(filepath, "a")
@@ -81,9 +81,22 @@ class FileHandler:
         file.close()
         
           
-    def create_file(self, file_id:str, sport:str, season:str, bet_type:str, home_team:str, away_team:str, start_time:str, columns:list[str]):
-        if (self.file_exists(file_id)):
+    def create_file(self, file_id:str, bet_type:str, columns:list[str], **kwargs):
+                    #sport:str, season:str, bet_type:str, home_team:str, away_team:str, start_time:str, columns:list[str]):
+        if (self.file_exists(file_id, bet_type)):
             raise ValueError(f"File already exists for {file_id}.")
+        elif (self.id_exists(file_id)):
+            sport = self.get_sport(file_id)
+            season = self.get_season(file_id)
+            self.__update_table_bet_type(file_id, bet_type)
+        else:
+            sport = kwargs["sport"]
+            season = kwargs["season"]
+            home_team = kwargs["home_team"]
+            away_team = kwargs["away_team"]
+            start_time = kwargs["away_team"]
+            self.__update_table(file_id, "sport", "season", "home_team", "away_team", "start_time", "bet_type", 
+                                sport=sport, season=season, home_team=home_team, away_team=away_team, start_time=start_time, bet_type=[bet_type])
         
         if (not self.directory_exists(sport)):
             self.create_directory(sport)
@@ -92,7 +105,7 @@ class FileHandler:
         if (not self.directory_exists(f"{sport}/{season}/{bet_type}")):
             self.create_directory(f"{sport}/{season}/{bet_type}")
           
-        self.__update_table(file_id, "sport", "season", "home_team", "away_team", "start_time", sport=sport, season=season, home_team=home_team, away_team=away_team, start_time=start_time)
+        
         filepath = self.get_filepath(file_id, bet_type)
         file = open(filepath, "w")
         file.write(f"{','.join(columns)}\n")
@@ -105,7 +118,11 @@ class FileHandler:
         return f"{self.__mount}/{sport}/{season}/{bet_type}/{file_id}.csv"
         
         
-    def file_exists(self, file_id:str) -> bool:
+    def file_exists(self, file_id:str, bet_type:str) -> bool:
+        return file_id in self.__table and bet_type in self.__table[file_id]["bet_type"]
+    
+        
+    def id_exists(self, file_id:str) -> bool:
         return file_id in self.__table
     
     
@@ -121,63 +138,63 @@ class FileHandler:
     ## GETTERS AND SETTERS ##
     
     def get_sport(self, file_id:str) -> str:
-        if (not self.file_exists(file_id)):
+        if (not self.id_exists(file_id)):
             raise ValueError("File ID ({file_id}) does not exist.")
         else:
             return self.__read_table(file_id, "sport")
        
            
     def set_sport(self, file_id:str, sport:str) -> None:
-        if (not self.file_exists(file_id)):
+        if (not self.id_exists(file_id)):
             raise ValueError("File ID ({file_id}) does not exist.")
         else:
             self.__update_table(file_id, "sport", sport=sport)
             
         
     def get_season(self, file_id:str) -> str:
-        if (not self.file_exists(file_id)):
+        if (not self.id_exists(file_id)):
             raise ValueError("File ID ({file_id}) does not exist.")
         else:
             return self.__read_table(file_id, "season")
         
         
     def set_season(self, file_id:str, season:str) -> None:
-        if (not self.file_exists(file_id)):
+        if (not self.id_exists(file_id)):
             raise ValueError("File ID ({file_id}) does not exist.")
         else:
             self.__update_table(file_id, "season", season=season)
             
         
     def get_home_team(self, file_id:str) -> str:
-        if (not self.file_exists(file_id)):
+        if (not self.id_exists(file_id)):
             raise ValueError("File ID ({file_id}) does not exist.")
         else:
             return self.__read_table(file_id, "home_team")
         
     
     def set_home_team(self, file_id:str, home_team:str) -> None:
-        if (not self.file_exists(file_id)):
+        if (not self.id_exists(file_id)):
             raise ValueError("File ID ({file_id}) does not exist.")
         else:
             self.__update_table(file_id, "home_team", home_team=home_team)
             
     
     def get_away_team(self, file_id:str) -> str:
-        if (not self.file_exists(file_id)):
+        if (not self.id_exists(file_id)):
             raise ValueError("File ID ({file_id}) does not exist.")
         else:
             return self.__read_table(file_id, "away_team")
 
   
     def set_away_team(self, file_id:str, away_team:str) -> None:
-        if (not self.file_exists(file_id)):
+        if (not self.id_exists(file_id)):
             raise ValueError("File ID ({file_id}) does not exist.")
         else:
             self.__update_table(file_id, "away_team", away_team=away_team)
 
 
     def get_start_time(self, file_id:str) -> str:
-        if (not self.file_exists(file_id)):
+        if (not self.id_exists(file_id)):
             raise ValueError("File ID ({file_id}) does not exist.")
         else:
             start_time = self.__read_table(file_id, "start_time")
@@ -185,7 +202,7 @@ class FileHandler:
 
 
     def set_start_time(self, file_id:str, start_time:str) -> None:
-        if (not self.file_exists(file_id)):
+        if (not self.id_exists(file_id)):
             raise ValueError("File ID ({file_id}) does not exist.")
         else:
             self.__update_table(file_id, "start_time", start_time=start_time)
@@ -201,7 +218,7 @@ class FileHandler:
             path = f"{self.__mount}/{sport}/"
             return [filename.split(".csv")[0] for filename in os.listdir(path) if os.path.isfile(os.path.join(path, filename))]
     
-        
+
             
     ##  PRIVATE METHODS ##    
     
@@ -219,7 +236,7 @@ class FileHandler:
         
               
     def __read_table(self, file_id:str, key:str) -> None:
-        if (not self.file_exists(file_id)):
+        if (not self.id_exists(file_id)):
             raise ValueError("File ID {file_id} does not exist.")
         else:
             return self.__table[file_id][key]
@@ -233,10 +250,17 @@ class FileHandler:
         
         
     def __update_table(self, file_id:str, *args, **kwargs) -> None:
-        if (not self.file_exists(file_id)):
+        if (not self.id_exists(file_id)):
             self.__table[file_id] = dict()
             
         for arg in args:
             self.__table[file_id][arg] = kwargs[arg]
         self.__write_table()
             
+            
+    def __update_table_bet_type(self, file_id:str, bet_type:str):
+        if (not self.id_exists(file_id)):
+            raise ValueError(f"File {file_id} does not exist.")
+        else:
+            self.__table[file_id]["bet_type"].append(bet_type)
+            self.__write_table()

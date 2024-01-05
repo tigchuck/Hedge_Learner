@@ -3,7 +3,14 @@ from OddsMath import OddsMath
 
 def main():
     handler = DataHandler()
-    handler.collect_data(request_type="local", filename="SampleData6.json")
+    # handler.collect_data(sport="americanfootball_nfl", regions="us", markets="h2h", odds_format="decimal", request_type="default", filename="SampleData9.json")    
+    # handler.collect_data(sport="americanfootball_nfl", regions="us2", markets="h2h", odds_format="decimal", request_type="default", filename="SampleData9-2.json")
+    # handler.collect_data(sport="americanfootball_nfl", regions="us", markets="spreads", odds_format="decimal", request_type="default", filename="SampleData10.json")
+    # handler.collect_data(sport="americanfootball_nfl", regions="us2", markets="spreads", odds_format="decimal", request_type="default", filename="SampleData10-2.json")
+    handler.collect_data(sport="americanfootball_nfl", regions="us", markets="h2h", odds_format="decimal", request_type="local", filename="SampleData9.json")    
+    handler.collect_data(sport="americanfootball_nfl", regions="us2", markets="h2h", odds_format="decimal", request_type="local", filename="SampleData9-2.json")
+    handler.collect_data(sport="americanfootball_nfl", regions="us", markets="spreads", odds_format="decimal", request_type="local", filename="SampleData10.json")
+
     # for filename in handler.list_files(sport="americanfootball_nfl"):
     #     if (filename in file_set):
     #         print(filename)
