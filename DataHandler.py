@@ -95,10 +95,14 @@ class DataHandler(FileHandler):
     
     ## REQUEST METHODS ##
     
-    def collect_data(self, sport:str="americanfootball_nfl", regions:list[str]=["us"], markets:str="h2h", odds_format:str="decimal", request_type:str="default", **kwargs) -> None:        
+    def collect_data(self, sport:str=None, regions:list[str]=None, bookmakers:list[str]=None, markets:str=None, odds_format:str="decimal", request_type:str="default", **kwargs) -> None:        
         ## SEND REQUEST ##
         if (request_type == "default"):
-            odds_df = self.__send_request(sport, regions, markets, odds_format, filename=kwargs["filename"])
+            if (sport == None or markets == None):
+                raise ValueError("sport and markets must be assigned values for default data collection.")
+            elif (regions == None and bookmakers == None):
+                raise ValueError("At least on of regions or bookmakers must be specified for default data collection.")
+            odds_df = self.__send_request(sport, regions, bookmakers, markets, odds_format, filename=kwargs["filename"])
         elif (request_type == "historic"):
             pass
             # odds_df = self.__send_request_historic(sport, regions, markets, odds_format, kwargs["update_time"])
@@ -144,9 +148,19 @@ class DataHandler(FileHandler):
                     super().append_file(file_id, bet_type, *self.__get_structure(sport, bet_type), **values)
         
         
-    def __send_request(self, sport:str, regions:list[str], markets:str, odds_format:str, filename:str=None) -> pd.DataFrame:  
+    def __send_request(self, sport:str, regions:list[str], bookmakers:list[str], markets:str, odds_format:str, filename:str=None) -> pd.DataFrame:  
         # Only send 1 market at a time. This will make copying them into files more simple.    
-        response = requests.get(f"https://api.the-odds-api.com/v4/sports/{sport}/odds", params = {"api_key": self.api_key, "regions": ",".join(regions), "markets": markets, "oddsFormat": odds_format})
+        response = requests.get(
+            f"https://api.the-odds-api.com/v4/sports/{sport}/odds", 
+            params = {
+                "api_key": self.api_key, 
+                "regions": ",".join(regions), 
+                "bookmakers": ",".join(bookmakers), 
+                "markets": markets, 
+                "oddsFormat": odds_format
+            }
+        )
+        
         if response.status_code != 200:
             print(f'Failed to get odds: status_code {response.status_code}, response body {response.text}')
         else:
