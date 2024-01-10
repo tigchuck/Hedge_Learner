@@ -57,14 +57,31 @@ class DataHandler(FileHandler):
     def __get_structure(self, sport:str, bet_type:str):
         return self.__structure[sport]["structure"][bet_type]
     
-    def __read_prices(self, sport:str, bet_type:str, data:dict):
+    def __read_prices(self, sport:str, bet_type:str, home_team:str, away_team:str, data:dict):
         if (data["key"] != bet_type):
             return
+        
         keys = self.__structure[sport]["structure"][bet_type][3:]
         values = dict()
+        check = False
         for key in keys:
             args = self.__price_dict[key]
-            values[key] = data[args[0]][args[1]][args[2]]
+            if (args[1] == "Home"):
+                name = home_team
+            elif (args[1] == "Away"):
+                name = away_team
+            else:
+                name = args[1]
+                
+            for outcome in data[args[0]]:   
+                if (outcome["name"] == name):    # Make sure pulling correct team for home/away
+                    values[key] = outcome[args[2]]
+                    check = True
+                    break
+                
+            if (not check):
+                raise ValueError(f"{args[1]} is not a proper key.")
+            
         return values
     
     
@@ -138,7 +155,7 @@ class DataHandler(FileHandler):
 
             ## WRITE TO FILE ##
             for item in row["bookmakers"]:
-                values = self.__read_prices(sport, bet_type, item["markets"][0])
+                values = self.__read_prices(sport, bet_type, home_team, away_team, item["markets"][0])
                 if (values == None):
                     continue
                 else:
