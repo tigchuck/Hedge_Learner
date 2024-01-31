@@ -35,7 +35,8 @@ class FileHandler:
     
     ## PUBLIC METHODS ##  
     
-    def get_data(self, file_ids:list[str], bet_type:str, before_commence:str):
+    ## STILL NEEDS WRITTEN OR REMOVED ##
+    def get_data(self, file_ids:list[str], bet_type:str, before_commence:bool):
         n = len(file_ids)
         for i in range(n):
             file_id = file_ids[i]

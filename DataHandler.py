@@ -114,20 +114,8 @@ class DataHandler(FileHandler):
     
     def collect_data(self, sport:str=None, regions:list[str]=None, bookmakers:list[str]=None, markets:str=None, odds_format:str="decimal", request_type:str="default", **kwargs) -> None:        
         ## SEND REQUEST ##
-        if (request_type == "default"):
-            if (sport == None or markets == None):
-                raise ValueError("sport and markets must be assigned values for default data collection.")
-            elif (regions == None and bookmakers == None):
-                raise ValueError("At least on of regions or bookmakers must be specified for default data collection.")
-            odds_df = self.__send_request(sport, regions, bookmakers, markets, odds_format, filename=kwargs["filename"])
-        elif (request_type == "historic"):
-            pass
-            # odds_df = self.__send_request_historic(sport, regions, markets, odds_format, kwargs["update_time"])
-        elif (request_type == "local"):
-            odds_df = self.__send_request_local(kwargs["filename"])
-        else:
-            raise ValueError(f"{request_type} is not a valid request type.")
-        
+        odds_df = self.__send_request(sport, regions, bookmakers, markets, odds_format, request_type, **kwargs)
+
         ## HANDLE REQUEST ##            
         for _, row in odds_df.iterrows():
             file_id = row["id"]
@@ -141,7 +129,10 @@ class DataHandler(FileHandler):
             ## OPEN/CREATE FILE ##
             if (super().file_exists(file_id, bet_type)):
                 file_df = super().read_file(file_id, bet_type)
-                update_number = int(file_df.iloc[-1,:]["Update"]) + 1
+                try:
+                    update_number = int(file_df.iloc[-1,:]["Update"]) + 1
+                except IndexError:
+                    update_number = 0
             elif (super().id_exists(file_id)):
                 super().create_file(file_id, bet_type, self.__get_structure(sport, bet_type))
                 update_number = 0
@@ -165,7 +156,43 @@ class DataHandler(FileHandler):
                     super().append_file(file_id, bet_type, *self.__get_structure(sport, bet_type), **values)
         
         
-    def __send_request(self, sport:str, regions:list[str], bookmakers:list[str], markets:str, odds_format:str, filename:str=None) -> pd.DataFrame:  
+    def __send_request(self, sport:str=None, regions:list[str]=None, bookmakers:list[str]=None, markets:str=None, odds_format:str="decimal", request_type:str="default", **kwargs) -> pd.DataFrame:
+        if (request_type == "default"):
+            if (sport == None or markets == None):
+                raise ValueError("sport and markets must be assigned values for default data collection.")
+            elif (regions == None and bookmakers == None):
+                raise ValueError("At least one region or bookmaker must be specified for default data collection.")
+            if ("filename" in kwargs):
+                return self.__send_request_default(sport, regions, bookmakers, markets, odds_format, filename=kwargs["filename"])
+            else:
+                return self.__send_request_default(sport, regions, bookmakers, markets, odds_format)
+                
+        elif (request_type == "historic"):
+            if (sport == None or markets == None):
+                raise ValueError("sport and markets must be assigned values for historic data collection.")
+            elif (regions == None and bookmakers == None):
+                raise ValueError("At least one region or bookmaker must be specified for historic data collection.")
+            elif ("date" not in kwargs):
+                raise ValueError('"date" must be specified as a keyword argument for historic data collection.')
+            if ("filename" in kwargs):
+                timestamp, prev_timestamp, next_timestamp, odds_df = self.__send_request_historic(sport, regions, bookmakers, markets, odds_format, date=kwargs["date"], filename=kwargs["filename"])
+                kwargs["timestamps"] += [timestamp, prev_timestamp, next_timestamp]
+                return odds_df
+            else:
+                timestamp, prev_timestamp, next_timestamp, odds_df = self.__send_request_historic(sport, regions, bookmakers, markets, odds_format, date=kwargs["date"])
+                kwargs["timestamps"] += [timestamp, prev_timestamp, next_timestamp]
+                return odds_df
+                
+        elif (request_type == "local"):
+            if ("filename" not in kwargs):
+                raise ValueError('"filename" must be specified as a keyword argument for local data collection.')
+            return self.__send_request_local(kwargs["filename"])
+            
+        else:
+            raise ValueError(f"{request_type} is not a valid request type.")
+ 
+        
+    def __send_request_default(self, sport:str, regions:list[str], bookmakers:list[str], markets:str, odds_format:str, filename:str=None) -> pd.DataFrame:  
         # Only send 1 market at a time. This will make copying them into files more simple.    
         response = requests.get(
             f"https://api.the-odds-api.com/v4/sports/{sport}/odds", 
@@ -184,23 +211,42 @@ class DataHandler(FileHandler):
             odds_json = response.json()
             
             print('Number of events:', len(odds_json))
-            # print(odds_json)
-            
+            print('Remaining requests', response.headers['x-requests-remaining'])
+            print('Used requests', response.headers['x-requests-used'])
             if filename != None:
                 file = open(filename, "w")
                 json.dump(odds_json, file)
                 file.close()
-
-            # Check the usage quota
-            print('Remaining requests', response.headers['x-requests-remaining'])
-            print('Used requests', response.headers['x-requests-used'])
-            
             odds_df = pd.read_json(json.dumps(odds_json), orient="records")
             return odds_df
     
     
-    def __send_request_historic(self, sport:str, regions:list[str], markets:list[str], odds_format:str, update_time:str) -> pd.DataFrame:
-        pass
+    def __send_request_historic(self, sport:str, regions:list[str], bookmakers:list[str], markets:str, odds_format:str, date:str, filename:str=None) -> pd.DataFrame:
+        response = requests.get(
+            f"https://api.the-odds-api.com/v4/historical/sports/{sport}/odds", 
+            params = {
+                "api_key": self.api_key, 
+                "regions": ",".join(regions) if regions else None, 
+                "bookmakers": ",".join(bookmakers) if bookmakers else None, 
+                "markets": markets, 
+                "oddsFormat": odds_format,
+                "date": date
+            }
+        )
+        
+        if response.status_code != 200:
+            print(f'Failed to get odds: status_code {response.status_code}, response body {response.text}')
+        else:
+            odds_json = response.json()
+            print('Number of events:', len(odds_json))  
+            print('Remaining requests', response.headers['x-requests-remaining'])
+            print('Used requests', response.headers['x-requests-used'])          
+            if filename != None:
+                file = open(filename, "w")
+                json.dump(odds_json["data"], file)  # Historic response slightly different
+                file.close()
+            odds_df = pd.read_json(json.dumps(odds_json["data"]), orient="records")
+            return odds_json["timestamp"], odds_json["previous_timestamp"], odds_json["next_timestamp"], odds_df
         
         
     def __send_request_local(self, request:str="./SampleData.json") -> pd.DataFrame:
