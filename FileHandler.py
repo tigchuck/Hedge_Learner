@@ -100,7 +100,6 @@ class FileHandler:
         
           
     def create_file(self, file_id:str, bet_type:str, columns:list[str], **kwargs):
-                    #sport:str, season:str, bet_type:str, home_team:str, away_team:str, start_time:str, columns:list[str]):
         if (self.file_exists(file_id, bet_type)):
             raise ValueError(f"File already exists for {file_id}.")
         elif (self.id_exists(file_id)):

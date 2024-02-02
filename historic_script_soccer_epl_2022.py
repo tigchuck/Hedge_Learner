@@ -10,33 +10,36 @@ bookmakers = ["betmgm", "bovada", "draftkings", "fanduel", "mybookieag", "willia
 markets = "h2h"
 odds_format = "decimal"
 # init_date = "2022-08-01T00:00:00Z"
-init_date = "2022-09-01T00:05:00Z"
-# end_date = pd.Timestamp("2022-11-14T00:00:00Z")
-# end_date = pd.Timestamp("2022-09-01T00:00:00Z")
+date = "2022-11-07T12:25:00Z"
+end_date = pd.Timestamp("2022-11-14T00:00:00Z") # Christmas Break
 
-dh.collect_data(
-    sport=sport, 
-    bookmakers=bookmakers,
-    markets=markets,
-    odds_format=odds_format,
-    request_type="historic",
-    date=init_date,
-    timestamps=timestamps
-)
-_, _, ts = timestamps
 
-while (pd.Timestamp(ts) < end_date):
+loop = 0
+while (pd.Timestamp(date) < end_date):
     timestamps = []
-    dh.collect_data(
-        sport=sport, 
-        bookmakers=bookmakers,
-        markets=markets,
-        odds_format=odds_format,
-        request_type="historic",
-        date=ts,
-        timestamps=timestamps
-    )
-    _, _, ts = timestamps
-    print(ts)
+    if (loop % 100 == 0):
+        dh.collect_data (
+            sport=sport,
+            bookmakers=bookmakers,
+            markets=markets,
+            odds_format=odds_format,
+            request_type="historic",
+            date=date,
+            timestamps=timestamps,
+            filename=f"{sport}-{markets}-{date}"
+        )
+    else:
+        dh.collect_data(
+            sport=sport, 
+            bookmakers=bookmakers,
+            markets=markets,
+            odds_format=odds_format,
+            request_type="historic",
+            date=date,
+            timestamps=timestamps
+        )
+    loop += 1
+    _, _, date = timestamps
+    print(date)
     print()
 

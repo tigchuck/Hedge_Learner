@@ -153,7 +153,10 @@ class DataHandler(FileHandler):
                     values["Update"] = update_number
                     values["Time"] = item["last_update"]
                     values["Sportsbook"] = item["key"]
-                    super().append_file(file_id, bet_type, *self.__get_structure(sport, bet_type), **values)
+                    try:
+                        super().append_file(file_id, bet_type, *self.__get_structure(sport, bet_type), **values)
+                    except KeyError:
+                        raise KeyError(f"Dictionary caused error:\n{values}")
         
         
     def __send_request(self, sport:str=None, regions:list[str]=None, bookmakers:list[str]=None, markets:str=None, odds_format:str="decimal", request_type:str="default", **kwargs) -> pd.DataFrame:
