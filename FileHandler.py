@@ -69,8 +69,10 @@ class FileHandler:
         filepath = self.get_filepath(file_id, bet_type)
         df = pd.read_csv(filepath)
         if (start_time_cutoff):
-            start_time = self.get_start_time(file_id)
+            start_time = pd.to_datetime(self.get_start_time(file_id))
+            df["Time"] = pd.to_datetime(df["Time"])
             df = df.loc[(df["Time"] <= start_time)]
+            df = df.reset_index(drop=True)
         return df
        
        

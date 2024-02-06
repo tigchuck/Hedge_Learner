@@ -6,7 +6,8 @@ from FileHandler import FileHandler
 # Could include standard dev as part of this DataFrame
 def fair_price(file_id:str, bet_type:str, filters:list[str]):
     fh = FileHandler()
-    file_df = fh.read_file(file_id, bet_type, True)
+    file_df = fh.read_file(file_id, bet_type, start_time_cutoff=True)
+    print(len(file_df))
     update_number = int(file_df.iloc[-1,:]["Update"])
     columns = [None] * ((len(filters) * 3) + 1) 
     columns[0] = "Time"
@@ -20,6 +21,8 @@ def fair_price(file_id:str, bet_type:str, filters:list[str]):
         
     price_df = pd.DataFrame(index=range(update_number + 1), columns=columns)
     for i in range(update_number+1):
+        if (i % 1000 == 0):
+            print(i)
         filtered_file_df = file_df.where(file_df["Update"] == i, inplace=False)
         filtered_sd = filtered_file_df.loc[:, filters].std(ddof=0) # ddof set to 0 so no divide by zero when only one row
         for j in range(len(filters)):
