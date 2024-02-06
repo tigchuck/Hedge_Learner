@@ -52,7 +52,7 @@ class FileHandler:
             
             
           
-    def read_file(self, file_id:str, bet_type:str) -> pd.DataFrame:
+    def read_file(self, file_id:str, bet_type:str, start_time_cutoff:bool = False) -> pd.DataFrame:
         """
         Read file as Pandas DataFrame.
         
@@ -67,7 +67,11 @@ class FileHandler:
         if (not self.file_exists(file_id, bet_type)):
             raise ValueError("File ID ({file_id}) does not exist.")
         filepath = self.get_filepath(file_id, bet_type)
-        return pd.read_csv(filepath)
+        df = pd.read_csv(filepath)
+        if (start_time_cutoff):
+            start_time = self.get_start_time(file_id)
+            df = df.loc[(df["Time"] <= start_time)]
+        return df
        
        
     def append_file(self, file_id:str, bet_type:str, *args, **kwargs):
