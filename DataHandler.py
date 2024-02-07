@@ -63,8 +63,8 @@ class DataHandler(FileHandler):
         
         keys = self.__structure[sport]["structure"][bet_type][3:]
         values = dict()
-        check = False
         for key in keys:
+            check = False
             args = self.__price_dict[key]
             if (args[1] == "Home"):
                 name = home_team
@@ -73,6 +73,7 @@ class DataHandler(FileHandler):
             else:
                 name = args[1]
                 
+            price_exists = False
             for outcome in data[args[0]]:   
                 if (outcome["name"] == name):    # Make sure pulling correct team for home/away
                     values[key] = outcome[args[2]]
@@ -80,7 +81,7 @@ class DataHandler(FileHandler):
                     break
                 
             if (not check):
-                raise ValueError(f"{args[1]} is not a proper key.")
+                return  # Return None is checked for in calling function
             
         return values
     
@@ -241,7 +242,7 @@ class DataHandler(FileHandler):
             print(f'Failed to get odds: status_code {response.status_code}, response body {response.text}')
         else:
             odds_json = response.json()
-            print('Number of events:', len(odds_json))  
+            print('Number of events:', len(odds_json["data"]))  
             print('Remaining requests', response.headers['x-requests-remaining'])
             print('Used requests', response.headers['x-requests-used'])          
             if filename != None:

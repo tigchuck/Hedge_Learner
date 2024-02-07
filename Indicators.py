@@ -4,6 +4,7 @@ from FileHandler import FileHandler
 
 # I could precompute fair prices...?
 # Could include standard dev as part of this DataFrame
+# Should look into pd.groupby
 def fair_price(file_id:str, bet_type:str, filters:list[str]):
     fh = FileHandler()
     file_df = fh.read_file(file_id, bet_type, start_time_cutoff=True)

@@ -2,8 +2,10 @@ from DataHandler import DataHandler
 from FileHandler import FileHandler
 from Indicators import fair_price
 import matplotlib.pyplot as plt  
+import pandas as pd
 
 def main():
+    print(pd.Timestamp("2022-11-14T00:00:00Z") + pd.Timedelta(minutes=15))
     file_id="0b1f0dfae67cca631732edf0ccb5ad33"
     bet_type="h2h"
     

@@ -10,23 +10,23 @@ bookmakers = ["betmgm", "bovada", "draftkings", "fanduel", "mybookieag", "willia
 markets = "h2h"
 odds_format = "decimal"
 # init_date = "2022-08-01T00:00:00Z"
-date = "2022-11-07T12:25:00Z"
-end_date = pd.Timestamp("2022-11-14T00:00:00Z") # Christmas Break
+date = pd.Timestamp("2023-01-11T13:10:00Z")
+end_date = pd.Timestamp("2023-05-29T00:00:00Z")
 
 
 loop = 0
-while (pd.Timestamp(date) < end_date):
+while (date < end_date):
     timestamps = []
-    if (loop % 100 == 0):
+    if (loop % 500 == 0):
         dh.collect_data (
             sport=sport,
             bookmakers=bookmakers,
             markets=markets,
             odds_format=odds_format,
             request_type="historic",
-            date=date,
+            date=date.strftime("%Y-%m-%dT%XZ"),
             timestamps=timestamps,
-            filename=f"{sport}-{markets}-{date}"
+            filename=f"Data/Sample_API_JSON/{sport}-{markets}-{date.strftime('%Y-%m-%dT%XZ')}.json"
         )
     else:
         dh.collect_data(
@@ -35,11 +35,10 @@ while (pd.Timestamp(date) < end_date):
             markets=markets,
             odds_format=odds_format,
             request_type="historic",
-            date=date,
+            date=date.strftime("%Y-%m-%dT%XZ"),
             timestamps=timestamps
         )
     loop += 1
-    _, _, date = timestamps
-    print(date)
-    print()
+    print(f"Requested: {date.strftime('%Y-%m-%dT%XZ')}\n\tPulled: {timestamps[0]}\n")
+    date = date + pd.Timedelta(minutes=10)
 
