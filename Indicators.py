@@ -5,7 +5,7 @@ from FileHandler import FileHandler
 # I could precompute fair prices...?
 # Could include standard dev as part of this DataFrame
 # Should look into pd.groupby
-def fair_price(file_id:str, bet_type:str, filters:list[str]):
+def fair_price(file_id:str, bet_type:str, filters:list[str]) -> pd.DataFrame:
     fh = FileHandler()
     file_df = fh.read_file(file_id, bet_type, start_time_cutoff=True)
     print(len(file_df))
@@ -36,3 +36,20 @@ def fair_price(file_id:str, bet_type:str, filters:list[str]):
             
     return price_df    
 
+# Need to make sure indexes for true odds and fair price line up.
+# Has to be based on update number because if pinnacle doesn't have odds,
+# fair price won't have an index even though it may have other data.
+def true_odds(file_id:str, bet_type:str, filters:list[str]) -> pd.DataFrame:
+    fh = FileHandler()
+    file_df = fh.read_file(file_id, bet_type, start_time_cutoff=True)
+    price_df = file_df.loc[(file_df["Sportsbook"] == "pinnacle")]
+    price_df = price_df[["Time"] + filters].reset_index(drop=True)
+    print(price_df)
+    
+    n = len(filters)
+    margin_df = (1 / price_df[filters]).sum(axis=1) - 1
+    print(margin_df)
+    odds_df = (n * price_df[filters]) / (n - price_df[filters].mul(margin_df, axis="index"))
+    odds_df.insert(0, "Time", price_df["Time"])
+    print(odds_df)
+    # (1 / price_df[filters]).sum(axis=1) All rows should equal 1.0
