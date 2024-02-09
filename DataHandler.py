@@ -97,6 +97,8 @@ class DataHandler(FileHandler):
             if ((season == None or loop_date > pd.Timestamp(self.__structure[sport]["seasons"][season])) and
                 (start_time >= loop_date)):
                     season = loop_season
+        if (season == None):
+            raise ValueError(f"This start time ({start_time}) does not fit with a corresponding {sport} season.")
         return season
     
     def list_sports(self):

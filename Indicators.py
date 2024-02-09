@@ -40,10 +40,11 @@ def fair_price(file_id:str, bet_type:str, filters:list[str]) -> pd.DataFrame:
 # Has to be based on update number because if pinnacle doesn't have odds,
 # fair price won't have an index even though it may have other data.
 def true_odds(file_id:str, bet_type:str, filters:list[str]) -> pd.DataFrame:
+    # https://www.football-data.co.uk/The_Wisdom_of_the_Crowd_updated.pdf
     fh = FileHandler()
     file_df = fh.read_file(file_id, bet_type, start_time_cutoff=True)
     price_df = file_df.loc[(file_df["Sportsbook"] == "pinnacle")]
-    price_df = price_df[["Time"] + filters].reset_index(drop=True)
+    price_df = price_df[["Time"] + filters].reset_index(drop=True)  # Cutting this line may be all that's needed to match indexes
     print(price_df)
     
     n = len(filters)
