@@ -34,23 +34,6 @@ class FileHandler:
     
     
     ## PUBLIC METHODS ##  
-    
-    ## STILL NEEDS WRITTEN OR REMOVED ##
-    def get_data(self, file_ids:list[str], bet_type:str, before_commence:bool):
-        n = len(file_ids)
-        for i in range(n):
-            file_id = file_ids[i]
-            file_df = self.read_file(file_id, bet_type)
-            update_number = int(file_df.iloc[-1,:]["Update"])
-            for j in range(update_number + 1):
-                filtered_file_df = file_df.where(file_df["Update"] == j, inplace=False)
-                max_home, max_away = filtered_file_df["Home_Odds"].max(), filtered_file_df["Away_Odds"].max()
-                mean_home, mean_away = filtered_file_df["Home_Odds"].mean(), filtered_file_df["Away_Odds"].mean()
-                median_home, median_away = filtered_file_df["Home_Odds"].median(), filtered_file_df["Away_Odds"].median()
-                stdev_home, stdev_away = filtered_file_df["Home_Odds"].std(), filtered_file_df["Away_Odds"].std()
-                print(max_home, max_away, mean_home, mean_away, median_home, median_away, stdev_home, stdev_away)
-            
-            
           
     def read_file(self, file_id:str, bet_type:str, start_time_cutoff:bool = False) -> pd.DataFrame:
         """
@@ -68,9 +51,9 @@ class FileHandler:
             raise ValueError("File ID ({file_id}) does not exist.")
         filepath = self.get_filepath(file_id, bet_type)
         df = pd.read_csv(filepath)
+        df["Time"] = pd.to_datetime(df["Time"])
         if (start_time_cutoff):
             start_time = pd.to_datetime(self.get_start_time(file_id))
-            df["Time"] = pd.to_datetime(df["Time"])
             df = df.loc[(df["Time"] <= start_time)]
             df = df.reset_index(drop=True)
         return df

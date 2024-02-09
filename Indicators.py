@@ -5,11 +5,14 @@ from FileHandler import FileHandler
 # I could precompute fair prices...?
 # Could include standard dev as part of this DataFrame
 # Should look into pd.groupby
+# Need to remove pinnacle
 def fair_price(file_id:str, bet_type:str, filters:list[str]) -> pd.DataFrame:
     fh = FileHandler()
     file_df = fh.read_file(file_id, bet_type, start_time_cutoff=True)
     print(len(file_df))
     update_number = int(file_df.iloc[-1,:]["Update"])
+    
+    # Generate List of Column Names
     columns = [None] * ((len(filters) * 3) + 1) 
     columns[0] = "Time"
     for i in range(len(filters)):
@@ -34,11 +37,17 @@ def fair_price(file_id:str, bet_type:str, filters:list[str]) -> pd.DataFrame:
             price_df.iloc[i, (j*3)+2] = data_row["Sportsbook"]
             price_df.iloc[i, (j*3)+3] = filtered_sd[filter]
             
+    pd.to_datetime(price_df["Time"])
+    for filter in [filters + [filter + "_Standard_Deviation" for filter in filters]]:
+        price_df[filter] = price_df[filter].astype(float)
+    print(price_df.dtypes)
     return price_df    
+
 
 # Need to make sure indexes for true odds and fair price line up.
 # Has to be based on update number because if pinnacle doesn't have odds,
 # fair price won't have an index even though it may have other data.
+# Need to fix data types for columns like in fair price
 def true_odds(file_id:str, bet_type:str, filters:list[str]) -> pd.DataFrame:
     # https://www.football-data.co.uk/The_Wisdom_of_the_Crowd_updated.pdf
     fh = FileHandler()
@@ -54,3 +63,4 @@ def true_odds(file_id:str, bet_type:str, filters:list[str]) -> pd.DataFrame:
     odds_df.insert(0, "Time", price_df["Time"])
     print(odds_df)
     # (1 / price_df[filters]).sum(axis=1) All rows should equal 1.0
+    
