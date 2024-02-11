@@ -54,13 +54,11 @@ def true_odds(file_id:str, bet_type:str, filters:list[str]) -> pd.DataFrame:
     file_df = fh.read_file(file_id, bet_type, start_time_cutoff=True)
     price_df = file_df.loc[(file_df["Sportsbook"] == "pinnacle")]
     price_df = price_df[["Time"] + filters].reset_index(drop=True)  # Cutting this line may be all that's needed to match indexes
-    print(price_df)
     
     n = len(filters)
     margin_df = (1 / price_df[filters]).sum(axis=1) - 1
-    print(margin_df)
     odds_df = (n * price_df[filters]) / (n - price_df[filters].mul(margin_df, axis="index"))
     odds_df.insert(0, "Time", price_df["Time"])
-    print(odds_df)
     # (1 / price_df[filters]).sum(axis=1) All rows should equal 1.0
+    return odds_df
     
