@@ -30,9 +30,9 @@ class FileHandler:
             self.__init_table()
         else:
             self.__table = table
-        
-    
-    
+
+    def table_len(self):
+        return len(self.__table)
     ## PUBLIC METHODS ##  
           
     def read_file(self, file_id:str, bet_type:str, start_time_cutoff:bool = False) -> pd.DataFrame:

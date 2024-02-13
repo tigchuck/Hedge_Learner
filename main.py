@@ -3,6 +3,7 @@ from FileHandler import FileHandler
 from Indicators import fair_price, true_odds
 import matplotlib.pyplot as plt  
 import pandas as pd
+import os
 
 def main():
     file_id="0b1f0dfae67cca631732edf0ccb5ad33"
@@ -33,6 +34,7 @@ def main():
     # ax[1,2].plot(fair_price_df.index, fair_price_df["Draw_Odds_Standard_Deviation"])
 
     plt.show()
+
 
 if __name__ == "__main__":
     main()
