@@ -3,8 +3,9 @@ import os
 import requests
 import time as t
 import pandas as pd
-from FileHandler import FileHandler
-from Credentials import API_KEY
+
+from .file_handler import FileHandler
+from .credentials import API_KEY
 
 
 ##################
@@ -18,7 +19,7 @@ from Credentials import API_KEY
 
 
 class DataHandler(FileHandler):
-    def __init__(self, mount="Data", structure=None):
+    def __init__(self, mount="data", structure=None):
         """
         Constructor
         

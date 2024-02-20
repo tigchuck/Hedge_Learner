@@ -15,7 +15,7 @@ import pandas as pd
 
 
 class FileHandler:
-    def __init__(self, table = None, mount = "Data"):
+    def __init__(self, table = None, mount = "data"):
         """
         Constructor
         

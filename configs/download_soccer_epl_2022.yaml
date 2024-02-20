@@ -1,0 +1,24 @@
+Odds:
+  sport: soccer_epl
+  bookmakers:
+    - betmgm
+    - bovada
+    - draftkings
+    - fanduel
+    - mybookieag
+    - williamhill_us
+    - espnbet
+    - hardrockbet
+    - tipico_us
+    - pinnacle
+  markets: h2h
+  odds_format: decimal
+
+Date:
+  start_date: "2022-08-01T00:00:00Z"
+  end_date: "2023-05-29T00:00:00Z"
+  step: 10  # minutes
+
+Season:
+  season: "2022-2023"
+  season_start: "2022-08-05T00:00:00Z"

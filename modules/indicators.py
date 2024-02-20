@@ -1,6 +1,6 @@
 import pandas as pd
 import numpy as np
-from FileHandler import FileHandler
+from .file_handler import FileHandler
 
 # I could precompute fair prices...?
 # Could include standard dev as part of this DataFrame
