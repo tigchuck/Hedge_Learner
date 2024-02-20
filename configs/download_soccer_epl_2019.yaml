@@ -15,8 +15,8 @@ Odds:
   odds_format: decimal
 
 Date:
-  start_date: "2020-06-10T00:00:00Z"  # Covid interruption halted on 6/17/2020
-  end_date: "2020-07-27T00:00:00Z"
+  start_date: "2019-08-01T00:00:00Z"  # Apparently Sports Odds API data only goes back to 6/2020
+  end_date: "2020-07-27T00:00:00Z"  # Covid interruption on 3/13/2020 until 6/17/2020
   step: 10  # minutes
 
 Season:

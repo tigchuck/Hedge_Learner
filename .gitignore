@@ -1,6 +1,9 @@
-Data/
+data/*
+!data/file_structure.json
+!data/info_table.json
+!data/price_dictionary.json
 credentials.py
-*.json
+
 *.csv
 
 # Byte-compiled / optimized / DLL files

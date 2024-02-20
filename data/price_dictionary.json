@@ -1,0 +1,10 @@
+{
+    "Home_Odds": ["outcomes", "Home", "price"],
+    "Away_Odds": ["outcomes", "Away", "price"],
+    "Draw_Odds": ["outcomes", "Draw", "price"],
+    "Home_Spread": ["outcomes", "Home", "point"],
+    "Away_Spread": ["outcomes", "Away", "point"],
+    "Total": ["outcomes", "Over", "point"],
+    "Over_Odds": ["outcomes", "Over", "price"],
+    "Under_Odds": ["outcomes", "Under", "price"]
+}
