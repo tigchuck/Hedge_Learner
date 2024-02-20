@@ -1,0 +1,25 @@
+Odds:
+  sport: soccer_epl
+  bookmakers:
+    - betmgm
+    - bovada
+    - draftkings
+    - fanduel
+    - mybookieag
+    - williamhill_us
+    - espnbet
+    - hardrockbet
+    - tipico_us
+    - pinnacle
+  markets: h2h
+  odds_format: decimal
+
+Date:
+  start_date: "2020-06-10T00:00:00Z"  # Covid interruption halted on 6/17/2020
+  end_date: "2020-07-27T00:00:00Z"
+  step: 10  # minutes
+
+Season:
+  season: "2019-2020"
+  start: "2019-08-09T00:00:00Z"
+
