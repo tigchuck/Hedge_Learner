@@ -21,13 +21,12 @@ class TestInfoTable:
         
 
     def test_files(self):
-        if self.verbose: print("hello")
         file = open(f"data/info_table.json", "r")
         table = json.load(file)   
         file.close()
         
         error_free = True
-        for sport in ["soccer_epl", "americanfootball_nfl"]:
+        for sport in ["soccer_epl", "americanfootball_nfl", "basketball_nba"]:
             seasons = os.listdir(f"data/{sport}")
             for season in seasons:
                 bet_types = os.listdir(f"data/{sport}/{season}")
